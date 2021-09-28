@@ -11,7 +11,9 @@ class MockShard(BaseExecutor):
     @requests
     def search(self, docs: DocumentArray, **kwargs):
         for doc in docs:
-            doc.matches.append(Document(tags={'shard_id': self.runtime_args.pea_id}))
+            matched_doc = Document(tags={'shard_id': self.runtime_args.pea_id})
+            matched_doc.scores['cosine'] = self.runtime_args.pea_id
+            doc.matches.append(matched_doc)
 
 
 @pytest.fixture
@@ -27,6 +29,4 @@ def test_match_merger(docs, shards):
         documents = f.search(docs, return_results=True)[0].docs
         assert len(documents) == 2
         for doc in documents:
-            assert {d.tags['shard_id'] for d in doc.matches} == {
-                float(i) for i in range(shards)
-            }
+            assert [d.scores['cosine'].value for d in doc.matches] == [shards - 1]

@@ -13,12 +13,21 @@ def docs_matrix():
             [
                 Document(
                     id=f'doc {i}',
-                    matches=[Document(id=f'doc {i}, match {j}') for j in range(3)],
+                    matches=[
+                        Document(
+                            id=f'doc {i}, match {j}',
+                            scores={'cosine': shard + i + j + 1},
+                        )
+                        for j in range(3)
+                    ],
                     chunks=[
                         Document(
                             id=f'doc {i}, chunk {j}',
                             matches=[
-                                Document(id=f'doc {i}, chunk {j}, match {k}')
+                                Document(
+                                    id=f'doc {i}, chunk {j}, match {k}',
+                                    scores={'cosine': shard + i + j + k + 1},
+                                )
                                 for k in range(2)
                             ],
                         )
@@ -36,13 +45,15 @@ def test_root_traversal(docs_matrix):
     executor = MatchMerger()
     document_array = executor.merge(docs_matrix=docs_matrix, parameters={})
     assert len(document_array) == 2
-    for d in document_array:
-        assert len(d.matches) == 12
+    for idx, d in enumerate(document_array):
+        assert d.matches == docs_matrix[-1][idx].matches
 
 
 def test_chunk_traversal(docs_matrix):
     executor = MatchMerger(default_traversal_paths=('c',))
     document_array = executor.merge(docs_matrix=docs_matrix, parameters={})
     assert len(document_array) == 6
-    for d in document_array:
-        assert len(d.matches) == 8
+    for idx, d in enumerate(document_array):
+        doc_idx = int(idx / 3)
+        chunk_idx = idx - (doc_idx * 3)
+        assert d.matches == docs_matrix[-1][doc_idx].chunks[chunk_idx].matches
