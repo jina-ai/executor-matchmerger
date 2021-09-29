@@ -1,7 +1,10 @@
 __copyright__ = "Copyright (c) 2021 Jina AI Limited. All rights reserved."
 __license__ = "Apache-2.0"
 
+import copy
 import pytest
+import random
+
 from jina import Document, DocumentArray
 from match_merger import MatchMerger
 
@@ -16,7 +19,7 @@ def docs_matrix():
                     matches=[
                         Document(
                             id=f'doc {i}, match {j}',
-                            scores={'cosine': shard + i + j + 1},
+                            scores={'cosine': random.random()},
                         )
                         for j in range(3)
                     ],
@@ -26,7 +29,7 @@ def docs_matrix():
                             matches=[
                                 Document(
                                     id=f'doc {i}, chunk {j}, match {k}',
-                                    scores={'cosine': shard + i + j + k + 1},
+                                    scores={'cosine': random.random()},
                                 )
                                 for k in range(2)
                             ],
@@ -41,19 +44,47 @@ def docs_matrix():
     ]
 
 
-def test_root_traversal(docs_matrix):
+@pytest.mark.parametrize('top_k', (3, 5))
+def test_root_traversal(docs_matrix, top_k):
     executor = MatchMerger()
-    document_array = executor.merge(docs_matrix=docs_matrix, parameters={})
+    document_array = executor.merge(
+        docs_matrix=docs_matrix, parameters={'top_k': top_k}
+    )
     assert len(document_array) == 2
-    for idx, d in enumerate(document_array):
-        assert d.matches == docs_matrix[-1][idx].matches
+    for d in document_array:
+        assert len(d.matches) == top_k
 
 
-def test_chunk_traversal(docs_matrix):
+@pytest.mark.parametrize('top_k', (3, 5))
+def test_chunk_traversal(docs_matrix, top_k):
     executor = MatchMerger(default_traversal_paths=('c',))
-    document_array = executor.merge(docs_matrix=docs_matrix, parameters={})
+    document_array = executor.merge(
+        docs_matrix=docs_matrix, parameters={'top_k': top_k}
+    )
     assert len(document_array) == 6
-    for idx, d in enumerate(document_array):
-        doc_idx = int(idx / 3)
-        chunk_idx = idx - (doc_idx * 3)
-        assert d.matches == docs_matrix[-1][doc_idx].chunks[chunk_idx].matches
+    for d in document_array:
+        assert len(d.matches) == top_k
+
+
+@pytest.mark.parametrize('top_k', (3, 5))
+def test_top_k(docs_matrix, top_k):
+    executor = MatchMerger()
+    document_array = executor.merge(
+        docs_matrix=copy.deepcopy(docs_matrix), parameters={'top_k': top_k}
+    )
+    expected_results = {}
+    for docs in docs_matrix:
+        executor._merge_shard(expected_results, docs, ('r',))
+    for doc in document_array:
+        expected_matches = DocumentArray(
+            sorted(
+                expected_results[doc.id].matches,
+                key=lambda m: m.scores['cosine'].value,
+                reverse=True,
+            )
+        )
+
+        assert [match.scores['cosine'].value for match in doc.matches] == [
+            expected_match.scores['cosine'].value
+            for expected_match in expected_matches[:top_k]
+        ]
