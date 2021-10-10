@@ -14,39 +14,31 @@ class MatchMerger(Executor):
 
     def __init__(
         self,
-        default_traversal_paths: Tuple[str, ...] = ('r',),
-        metric_name: str = 'cosine',
+        traversal_paths: Tuple[str, ...] = ('r',),
+        metric: str = 'cosine',
         **kwargs
     ):
         """
-        :param default_traversal_paths: traverse path on docs, e.g. ['r'], ['c']
-        :param metric_name: metric_name to score matches.
+        :param traversal_paths: traverse path on docs, e.g. ['r'], ['c']
+        :param metric: metric to score matches.
         """
         super().__init__(**kwargs)
-        self.default_traversal_paths = default_traversal_paths
-        self._metric_name = metric_name
+        self.traversal_paths = traversal_paths
+        self.metric = metric
 
     @requests
     def merge(self, docs_matrix: List[DocumentArray], parameters: dict, **kwargs):
 
-        metric_name = parameters.get('metric_name', self._metric_name)
+        metric = parameters.get('metric_name', self.metric)
         top_k = int(parameters.get('top_k', 10))
-        traversal_paths = parameters.get(
-            'traversal_paths', self.default_traversal_paths
-        )
+        traversal_paths = parameters.get('traversal_paths', self.traversal_paths)
 
         results = {}
         for docs in docs_matrix:
             self._merge_shard(results, docs, traversal_paths)
-        return self._select_top_k(
-            top_k, metric_name, DocumentArray(list(results.values()))
-        )
-
-    def _select_top_k(self, top_k, metric_name, docs):
+        docs = DocumentArray(list(results.values()))
         for doc in docs:
-            doc.matches = nlargest(
-                top_k, doc.matches, lambda m: m.scores[metric_name].value
-            )
+            doc.matches = nlargest(top_k, doc.matches, lambda m: m.scores[metric].value)
         return docs
 
     def _merge_shard(self, results, docs, traversal_paths):

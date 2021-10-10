@@ -57,7 +57,7 @@ def test_root_traversal(docs_matrix, top_k):
 
 @pytest.mark.parametrize('top_k', (3, 5))
 def test_chunk_traversal(docs_matrix, top_k):
-    executor = MatchMerger(default_traversal_paths=('c',))
+    executor = MatchMerger(traversal_paths=('c',))
     document_array = executor.merge(
         docs_matrix=docs_matrix, parameters={'top_k': top_k}
     )
