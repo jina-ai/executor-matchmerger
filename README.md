@@ -1,6 +1,6 @@
 # MatchMerger
 
-**MatchMerger** merges the matches in the same request based on the `.id` attribute. The matches of the Documents with the same `id` will be merged into one Document.
+**MatchMerger** merges the matches in the same request based on the `.id` attribute. The matches with parents of the same `id` will be merged into one single Document's `matches`
 
 
 ## Usage
