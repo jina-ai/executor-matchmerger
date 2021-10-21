@@ -19,11 +19,13 @@ class MatchMerger(Executor):
         self.default_traversal_paths = default_traversal_paths
 
     @requests
-    def merge(self, docs_matrix: List[DocumentArray], parameters: dict, **kwargs):
+    def merge(self, docs_matrix: List[DocumentArray] = [], parameters: dict = {}, **kwargs):
         traversal_paths = parameters.get(
             'traversal_paths', self.default_traversal_paths
         )
         results = {}
+        if not docs_matrix:
+            return
         for docs in docs_matrix:
             self._merge_shard(results, docs, traversal_paths)
         return DocumentArray(list(results.values()))

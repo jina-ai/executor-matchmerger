@@ -46,3 +46,8 @@ def test_chunk_traversal(docs_matrix):
     assert len(document_array) == 6
     for d in document_array:
         assert len(d.matches) == 8
+
+
+def test_none_doc():
+    executor = MatchMerger()
+    da = executor.merge(docs_matrix=[], parameters={})
