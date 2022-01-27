@@ -4,7 +4,7 @@ __license__ = "Apache-2.0"
 from typing import List, Tuple
 
 from jina import DocumentArray, Executor, requests
-
+import warnings
 
 class MatchMerger(Executor):
     """
@@ -16,6 +16,10 @@ class MatchMerger(Executor):
         :param default_traversal_paths: traverse path on docs, e.g. '@r', '@c'
         """
         super().__init__(**kwargs)
+        warnings.warn('The functionality of MatchMerger is subsumed by the default behaviour starting with'
+                                 'Jina 3. Consider dropping MatchMerger from your flows. MatchMerger might stop working'
+                                 'with future versions of Jina or Jina Hub.', DeprecationWarning)
+
         self.default_traversal_paths = default_traversal_paths
 
     @requests
