@@ -11,9 +11,9 @@ class MatchMerger(Executor):
     The MatchMerger merges the results of shards by appending all matches..
     """
 
-    def __init__(self, default_traversal_paths: Tuple[str, ...] = ('r',), **kwargs):
+    def __init__(self, default_traversal_paths: Tuple[str, ...] = '@r', **kwargs):
         """
-        :param default_traversal_paths: traverse path on docs, e.g. ['r'], ['c']
+        :param default_traversal_paths: traverse path on docs, e.g. '@r', '@c'
         """
         super().__init__(**kwargs)
         self.default_traversal_paths = default_traversal_paths
@@ -31,7 +31,7 @@ class MatchMerger(Executor):
         return DocumentArray(list(results.values()))
 
     def _merge_shard(self, results, docs, traversal_paths):
-        for doc in docs.traverse_flat(traversal_paths):
+        for doc in docs[traversal_paths]:
             if doc.id in results:
                 results[doc.id].matches.extend(doc.matches)
             else:
