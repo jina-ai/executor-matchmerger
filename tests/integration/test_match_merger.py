@@ -2,12 +2,11 @@ __copyright__ = "Copyright (c) 2021 Jina AI Limited. All rights reserved."
 __license__ = "Apache-2.0"
 
 import pytest
-from jina import Document, DocumentArray, Flow, requests
-from jina.executors import BaseExecutor
+from jina import Document, DocumentArray, Flow, requests, Executor
 from match_merger import MatchMerger
 
 
-class MockShard(BaseExecutor):
+class MockShard(Executor):
     @requests
     def search(self, docs: DocumentArray, **kwargs):
         for doc in docs:
@@ -24,7 +23,7 @@ def test_match_merger(docs, shards):
     with Flow().add(
         uses=MockShard, uses_after=MatchMerger, shards=shards, polling='all'
     ) as f:
-        documents = f.search(docs, return_results=True)[0].docs
+        documents = f.search(docs, return_results=True)
         assert len(documents) == 2
         for doc in documents:
             assert {d.tags['shard_id'] for d in doc.matches} == {
