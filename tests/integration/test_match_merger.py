@@ -10,7 +10,7 @@ class MockShard(Executor):
     @requests
     def search(self, docs: DocumentArray, **kwargs):
         for doc in docs:
-            doc.matches.append(Document(tags={'shard_id': self.runtime_args.pod_id}))
+            doc.matches.append(Document(tags={'shard_id': self.runtime_args.shard_id}))
 
 
 @pytest.fixture
