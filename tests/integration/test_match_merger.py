@@ -10,7 +10,7 @@ class MockShard(Executor):
     @requests
     def search(self, docs: DocumentArray, **kwargs):
         for doc in docs:
-            doc.matches.append(Document(tags={'shard_id': self.runtime_args.pod_id}))
+            doc.matches.append(Document(tags={'shard_id': self.runtime_args.shard_id}))
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_match_merger(docs, shards):
     with Flow().add(
         uses=MockShard, uses_after=MatchMerger, shards=shards, polling='all'
     ) as f:
-        documents = f.search(docs, return_results=True)
+        documents = f.search(docs)
         assert len(documents) == 2
         for doc in documents:
             assert {d.tags['shard_id'] for d in doc.matches} == {
