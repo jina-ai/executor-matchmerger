@@ -2,4 +2,4 @@ manifest_version: 1
 name: MatchMerger
 description: Merges the results of shards by appending all matches.
 url: https://github.com/jina-ai/executor-matchmerger
-keywords: [merger, sharding, search, 3.0-exclusive]
+keywords: [merger, sharding, search]
