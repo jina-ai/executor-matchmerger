@@ -41,7 +41,7 @@ def test_root_traversal(docs_matrix):
 
 
 def test_chunk_traversal(docs_matrix):
-    executor = MatchMerger(default_traversal_paths='@c')
+    executor = MatchMerger(default_access_paths='@c')
     document_array = executor.merge(docs_matrix=docs_matrix, parameters={})
     assert len(document_array) == 6
     for d in document_array:
